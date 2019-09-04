@@ -25,7 +25,13 @@ class SimplicialComplexOperators {
          * @param {module:Core.Mesh} mesh The input mesh which we index.
          */
         assignElementIndices(mesh) {
-                // TODO
+                //Solution to problem 1
+                let arraysToAssign = [mesh.vertices, mesh.edges, mesh.faces];
+                arraysToAssign.forEach( (arr) => {
+                for(let i = 0; i < arr.length; i++){
+                                arr[i].index = i;
+                        }
+                });
         }
 
         /** Returns the vertex-edge adjacency matrix of the given mesh.
