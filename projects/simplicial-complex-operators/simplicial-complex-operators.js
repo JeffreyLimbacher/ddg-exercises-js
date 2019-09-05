@@ -62,7 +62,7 @@ class SimplicialComplexOperators {
                 let T = new Triplet(mesh.faces.length, mesh.edges.length)
                 for(let f of mesh.faces){
                         let row = f.index
-                        for(let e of f.adjacentFaces()){
+                        for(let e of f.adjacentEdges()){
                                 let col = e.index
                                 T.addEntry(1.0, row, col)
                         }
@@ -79,7 +79,13 @@ class SimplicialComplexOperators {
          *  vertex i is in the given subset and 0 otherwise
          */
         buildVertexVector(subset) {
-                // TODO
+                let nVerts = this.totalVertices()
+                let T = new Triplet(nVerts, 1)
+                for(let v of subset.vertices){
+                        T.addEntry(1.0, v, 0)
+                }
+                let vertVector = SparseMatrix.fromTriplet(T)
+                return vertVector
         }
 
         /** Returns a column vector representing the edges of the
@@ -90,7 +96,13 @@ class SimplicialComplexOperators {
          *  edge i is in the given subset and 0 otherwise
          */
         buildEdgeVector(subset) {
-                // TODO
+                let nEdges = this.totalEdges()
+                let T = new Triplet(nEdges, 1)
+                for(let e of subset.edges){
+                        T.addEntry(1.0, e, 0)
+                }
+                let vector = SparseMatrix.fromTriplet(T)
+                return vector
         }
 
         /** Returns a column vector representing the faces of the
@@ -101,7 +113,13 @@ class SimplicialComplexOperators {
          *  face i is in the given subset and 0 otherwise
          */
         buildFaceVector(subset) {
-                // TODO
+                let nFaces = this.totalFaces()
+                let T = new Triplet(nFaces, 1)
+                for(let v of subset.faces){
+                        T.addEntry(1.0, v, 0)
+                }
+                let vector = SparseMatrix.fromTriplet(T)
+                return vector
         }
 
         /** Returns the star of a subset.
@@ -111,8 +129,42 @@ class SimplicialComplexOperators {
          */
         star(subset) {
                 // TODO
+                let vertexVec = this.buildVertexVector(subset)
+                let edgeVec = this.buildEdgeVector(subset)
+                let faceVec = this.buildFaceVector(subset)
 
-                return subset; // placeholder
+                let edgesFromVerts = this.A0.timesSparse(vertexVec)
+                let facesFromVerts = this.A1.timesSparse(edgesFromVerts)
+
+                let facesFromEdges = this.A1.timesSparse(edgeVec)
+
+                let allEdges = edgesFromVerts.plus(edgeVec)
+                let allFaces = facesFromEdges.plus(facesFromVerts).plus(faceVec)
+
+
+                let vertsD = vertexVec.toDense()
+                let edgesD = allEdges.toDense()
+                let facesD = allFaces.toDense()
+                const range = (start, end, length = end - start) =>
+                        Array.from({ length }, (_, i) => start + i)
+                
+                let vertices=[]; let edges=[]; let faces=[];
+                let vectors = [vertsD, edgesD, facesD]
+                let toModify = [vertices, edges, faces]
+                let ranges = [this.totalVertices(), this.totalEdges(), this.totalFaces()]
+                for(let i = 0; i < ranges.length; i++){
+                        let arr = toModify[i]
+                        let end = ranges[i]
+                        let vector = vectors[i]
+                        for(let j of range(0, end)){
+                                let val = vector.get(j, 0)
+                                if(val > 1e-5) arr.push(j)
+                        }
+                }
+                
+
+
+                return new MeshSubset(vertices, edges, faces); // placeholder
         }
 
         /** Returns the closure of a subset.
@@ -164,5 +216,32 @@ class SimplicialComplexOperators {
                 // TODO
 
                 return subset; // placeholder
+        }
+
+        /**
+         * Returns the total number of vertices in the mesh.
+         * @method module:Projects.SimplicialComplexOperators#totalVertices
+         * @returns {Number} The total number of vertices.
+         */
+        totalVertices() {
+                return this.A0.nCols();
+        }
+
+        /**
+         * Returns the total number of edges in the mesh.
+         * @method module:Projects.SimplicialComplexOperators#totalEdges
+         * @returns {Number} The total number of edges.
+         */
+        totalEdges() {
+                return this.A0.nRows();
+        }
+
+        /**
+         * Returns the total number of faces in the mesh.
+         * @method module:Projects.SimplicialComplexOperators#totalFaces
+         * @returns {Number} The total number of faces.
+         */
+        totalFaces() {
+                return this.A1.nRows();
         }
 }
