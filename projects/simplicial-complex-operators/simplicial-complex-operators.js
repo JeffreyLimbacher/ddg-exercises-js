@@ -145,26 +145,8 @@ class SimplicialComplexOperators {
                 let vertsD = vertexVec.toDense()
                 let edgesD = allEdges.toDense()
                 let facesD = allFaces.toDense()
-                const range = (start, end, length = end - start) =>
-                        Array.from({ length }, (_, i) => start + i)
                 
-                let vertices=[]; let edges=[]; let faces=[];
-                let vectors = [vertsD, edgesD, facesD]
-                let toModify = [vertices, edges, faces]
-                let ranges = [this.totalVertices(), this.totalEdges(), this.totalFaces()]
-                for(let i = 0; i < ranges.length; i++){
-                        let arr = toModify[i]
-                        let end = ranges[i]
-                        let vector = vectors[i]
-                        for(let j of range(0, end)){
-                                let val = vector.get(j, 0)
-                                if(val > 1e-5) arr.push(j)
-                        }
-                }
-                
-
-
-                return new MeshSubset(vertices, edges, faces); // placeholder
+                return this.meshSubsetFromVectors(vertsD, edgesD, facesD)
         }
 
         /** Returns the closure of a subset.
@@ -174,9 +156,22 @@ class SimplicialComplexOperators {
          */
         closure(subset) {
                 // TODO
+                let vertexVec = this.buildVertexVector(subset)
+                let edgeVec = this.buildEdgeVector(subset)
+                let faceVec = this.buildFaceVector(subset)
 
-                return subset; // placeholder
+                let edgesFromFaces = this.A1.transpose().timesSparse(faceVec)
+
+                let allEdges = edgeVec.plus(edgesFromFaces) 
+                let verticesFromEdges = this.A0.transpose().timesSparse(allEdges)
+
+                let vertsD = verticesFromEdges.toDense()
+                let edgesD = edgesFromFaces.toDense()
+                let facesD = faceVec.toDense()
+
+                return this.meshSubsetFromVectors(vertsD, edgesD, facesD)
         }
+
 
         /** Returns the link of a subset.
          * @method module:Projects.SimplicialComplexOperators#link
@@ -243,5 +238,25 @@ class SimplicialComplexOperators {
          */
         totalFaces() {
                 return this.A1.nRows();
+        }
+
+        meshSubsetFromVectors(vertsD, edgesD, facesD) {
+                const range = (start, end, length = end - start) =>
+                Array.from({ length }, (_, i) => start + i)
+        
+                let vertices=[]; let edges=[]; let faces=[];
+                let vectors = [vertsD, edgesD, facesD]
+                let toModify = [vertices, edges, faces]
+                let ranges = [this.totalVertices(), this.totalEdges(), this.totalFaces()]
+                for(let i = 0; i < ranges.length; i++){
+                        let arr = toModify[i]
+                        let end = ranges[i]
+                        let vector = vectors[i]
+                        for(let j of range(0, end)){
+                                let val = vector.get(j, 0)
+                                if(val > 1e-5) arr.push(j)
+                        }
+                }
+                return new MeshSubset(vertices, edges, faces);
         }
 }
