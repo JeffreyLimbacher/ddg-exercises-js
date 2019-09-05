@@ -41,16 +41,16 @@ class SimplicialComplexOperators {
          */
         buildVertexEdgeAdjacencyMatrix(mesh) {
                 //Solution to problem 2
-                let T = new Triplet(mesh.edges.length, mesh.vertices.length);
+                let T = new Triplet(mesh.edges.length, mesh.vertices.length)
                 mesh.edges.forEach((edge) => {
                         let row = edge.index;
-                        let col1 = edge.halfedge.vertex.index;
-                        let col2 = edge.halfedge.twin.vertex.index;
-                        T.addEntry(1, row, col1);
-                        T.addEntry(1, row, col2);
+                        let col1 = edge.halfedge.vertex.index
+                        let col2 = edge.halfedge.twin.vertex.index
+                        T.addEntry(1, row, col1)
+                        T.addEntry(1, row, col2)
                 });
-                let adjMat = SparseMatrix.fromTriplet(T);
-                return adjMat;
+                let adjMat = SparseMatrix.fromTriplet(T)
+                return adjMat
         }
 
         /** Returns the edge-face adjacency matrix.
@@ -59,7 +59,16 @@ class SimplicialComplexOperators {
          * @returns {module:LinearAlgebra.DenseMatrix} The edge-face adjacency matrix of the given mesh.
          */
         buildEdgeFaceAdjacencyMatrix(mesh) {
-                // TODO
+                let T = new Triplet(mesh.faces.length, mesh.edges.length)
+                for(let f of mesh.faces){
+                        let row = f.index
+                        for(let e of f.adjacentFaces()){
+                                let col = e.index
+                                T.addEntry(1.0, row, col)
+                        }
+                }
+                let adjMat = SparseMatrix.fromTriplet(T)
+                return adjMat
         }
 
         /** Returns a column vector representing the vertices of the
