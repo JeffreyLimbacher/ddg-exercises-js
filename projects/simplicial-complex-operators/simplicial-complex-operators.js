@@ -167,7 +167,7 @@ class SimplicialComplexOperators {
                 let allVertices = verticesFromEdges.plus(vertexVec)
 
                 let vertsD = allVertices.toDense()
-                let edgesD = edgesFromFaces.toDense()
+                let edgesD = allEdges.toDense()
                 let facesD = faceVec.toDense()
 
                 return this.meshSubsetFromVectors(vertsD, edgesD, facesD)
