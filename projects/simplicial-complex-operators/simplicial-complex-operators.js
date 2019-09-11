@@ -181,8 +181,15 @@ class SimplicialComplexOperators {
          */
         link(subset) {
                 // TODO
+                let closureSubset = this.closure(subset);
+                let starSubset = this.star(subset);
 
-                return subset; // placeholder
+                let closureStar = this.closure(starSubset);
+                let starClosure = this.star(closureSubset);
+
+                closureStar.deleteSubset(starClosure);
+
+                return closureStar; // placeholder
         }
 
         /** Returns true if the given subset is a subcomplex and false otherwise.
