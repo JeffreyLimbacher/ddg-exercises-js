@@ -258,6 +258,6 @@ class SimplicialComplexOperators {
                                 if(val > 1e-5) arr.push(j)
                         }
                 }
-                return new MeshSubset(vertices, edges, faces);
+                return new MeshSubset(new Set(vertices), new Set(edges), new Set(faces));
         }
 }
