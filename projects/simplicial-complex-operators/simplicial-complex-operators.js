@@ -164,8 +164,9 @@ class SimplicialComplexOperators {
 
                 let allEdges = edgeVec.plus(edgesFromFaces) 
                 let verticesFromEdges = this.A0.transpose().timesSparse(allEdges)
+                let allVertices = verticesFromEdges.plus(vertexVec)
 
-                let vertsD = verticesFromEdges.toDense()
+                let vertsD = allVertices.toDense()
                 let edgesD = edgesFromFaces.toDense()
                 let facesD = faceVec.toDense()
 
