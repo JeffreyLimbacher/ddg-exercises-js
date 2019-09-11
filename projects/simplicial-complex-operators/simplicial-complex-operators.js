@@ -198,7 +198,9 @@ class SimplicialComplexOperators {
          * @returns {boolean} True if the given subset is a subcomplex and false otherwise.
          */
         isComplex(subset) {
-                // TODO
+                // The closure of a simplical complex should be itself
+                let smallestComplex = this.closure(subset)
+                return smallestComplex.equals(subset)
         }
 
         /** Returns the degree if the given subset is a pure subcomplex and -1 otherwise.
