@@ -202,7 +202,45 @@ class SimplicialComplexOperators {
          * @returns {number} The degree of the given subset if it is a pure subcomplex and -1 otherwise.
          */
         isPureComplex(subset) {
-                // TODO
+
+                // A pure complex must be a complex
+                if(!this.isComplex(subset)){
+                        return -1
+                }
+
+                let degree = this.getMaxDegree(subset)
+                if( degree >= 2){
+                        // Check to make sure every face vector has its corresponding edges
+                        let faceVec = this.buildFaceVector(subset)
+                        let expectedEdges = this.A1.transpose().timesSparse(faceVec)
+                        let expectedEdgesSet = this.setFromVector(expectedEdges.toDense())
+                        if(!eqSet(expectedEdgesSet, subset.edges)){
+                                return -1
+                        }
+                }
+
+                if (degree >= 1) {
+                        // Check to see if every edge has its corresponding vertices.
+                        let edgeVec = this.buildEdgeVector(subset)
+                        let expectedVertices = this.A0.transpose().timesSparse(edgeVec)
+                        let expectedVerticesSet = this.setFromVector(expectedVertices.toDense())
+                        if(!eqSet(expectedVerticesSet, subset.vertices)){
+                                return -1
+                        }
+                }
+                return degree
+        }
+
+        getMaxDegree(subset){
+                if(subset.faces.size > 0){
+                        return 2
+                } 
+                else if (subset.edges.size > 0) {
+                        return 1
+                }
+                else{
+                        return 0
+                }
         }
 
         /** Returns the boundary of a subset.
@@ -211,9 +249,42 @@ class SimplicialComplexOperators {
          * @returns {module:Core.MeshSubset} The boundary of the given pure subcomplex.
          */
         boundary(subset) {
-                // TODO
+                let degree = this.isPureComplex(subset)
+                if(degree === -1){
+                        return subset
+                }
+                // boundary, bd(K), is the closure of the set of all simplices sigma tht are proper faces of exactly one simplex of K'
+                // depends on degree (I think) 
 
-                return subset; // placeholder
+                // Technically we can have the same code for each degree (e.g., in a pure 2-complex, no vertex appears in exactly one edge
+                // so  the second if branch will return nothing) but we can avoid unnecessary operations and capture the essence of the
+                // problem like this, so whatever.
+
+                if(degree === 2){
+                        let faceVec = this.buildFaceVector(subset)
+                        let edges = this.A1.transpose().timesSparse(faceVec).toDense()
+                        // Any element with one as an entry was in exactly one face
+                        let boundaryEdges = this.vectorToSetMatchingVal(edges, 1.0)
+                        return this.closure(new MeshSubset(new Set(), boundaryEdges, new Set()))
+                }
+                else if (degree === 1){
+                        let edgeVec = this.buildEdgeVector(subset)
+                        let vertices = this.A0.transpose().timesSparse(edgeVec).toDense()
+                        let boundaryVertices = this.vectorToSetMatchingVal(vertices, 1.0)
+                        return new MeshSubset(boundaryVertices, new Set(), new Set())
+                }
+
+                // closure of empty set (proper faces of vertices) is empty set
+                return new MeshSubset(); 
+        }
+
+        vectorToSetMatchingVal(vector, val) {
+                let valSet = new Set()
+                for(let i = 0; i < vector.nRows(); i++){
+                        let vecVal = vector.get(i, 0)
+                        if(vecVal == val) valSet.add(i)
+                }
+                return valSet
         }
 
         /**
@@ -269,4 +340,5 @@ class SimplicialComplexOperators {
                 let vertVector = SparseMatrix.fromTriplet(T)
                 return vertVector
         }
+
 }
