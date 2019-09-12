@@ -96,13 +96,8 @@ class SimplicialComplexOperators {
          *  edge i is in the given subset and 0 otherwise
          */
         buildEdgeVector(subset) {
-                let nEdges = this.totalEdges()
-                let T = new Triplet(nEdges, 1)
-                for(let e of subset.edges){
-                        T.addEntry(1.0, e, 0)
-                }
-                let vector = SparseMatrix.fromTriplet(T)
-                return vector
+                let vecSize = this.totalEdges()
+                return this.vectorFromSet(subset.edges, vecSize)
         }
 
         /** Returns a column vector representing the faces of the
@@ -113,13 +108,8 @@ class SimplicialComplexOperators {
          *  face i is in the given subset and 0 otherwise
          */
         buildFaceVector(subset) {
-                let nFaces = this.totalFaces()
-                let T = new Triplet(nFaces, 1)
-                for(let v of subset.faces){
-                        T.addEntry(1.0, v, 0)
-                }
-                let vector = SparseMatrix.fromTriplet(T)
-                return vector
+                let vecSize = this.totalFaces()
+                return this.vectorFromSet(subset.faces, vecSize)
         }
 
         /** Returns the star of a subset.
@@ -266,5 +256,14 @@ class SimplicialComplexOperators {
                         if(val > 1e-5) vecSet.add(i)
                 }
                 return vecSet
+        }
+
+        vectorFromSet(set, vecSize){
+                let T = new Triplet(vecSize, 1)
+                for(let v of set){
+                        T.addEntry(1.0, v, 0)
+                }
+                let vertVector = SparseMatrix.fromTriplet(T)
+                return vertVector
         }
 }
