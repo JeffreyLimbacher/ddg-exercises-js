@@ -251,22 +251,20 @@ class SimplicialComplexOperators {
         }
 
         meshSubsetFromVectors(vertsD, edgesD, facesD) {
-                const range = (start, end, length = end - start) =>
-                Array.from({ length }, (_, i) => start + i)
-        
-                let vertices=[]; let edges=[]; let faces=[];
-                let vectors = [vertsD, edgesD, facesD]
-                let toModify = [vertices, edges, faces]
-                let ranges = [this.totalVertices(), this.totalEdges(), this.totalFaces()]
-                for(let i = 0; i < ranges.length; i++){
-                        let arr = toModify[i]
-                        let end = ranges[i]
-                        let vector = vectors[i]
-                        for(let j of range(0, end)){
-                                let val = vector.get(j, 0)
-                                if(val > 1e-5) arr.push(j)
-                        }
+                let verticesSet = this.setFromVector(vertsD)
+                let edgesSet = this.setFromVector(edgesD)
+                let facesSet = this.setFromVector(facesD)
+                return new MeshSubset(verticesSet, edgesSet, facesSet);
+        }
+
+        setFromVector(vector){
+                //assume column vector
+                let range = vector.nRows();
+                let vecSet = new Set()
+                for(let i = 0; i < range; i++){
+                        let val = vector.get(i,0)
+                        if(val > 1e-5) vecSet.add(i)
                 }
-                return new MeshSubset(new Set(vertices), new Set(edges), new Set(faces));
+                return vecSet
         }
 }
