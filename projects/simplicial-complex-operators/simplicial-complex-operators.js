@@ -3,6 +3,14 @@
 /**
  * @module Projects
  */
+
+function eqSet(as, bs) {
+        // https://stackoverflow.com/questions/31128855/comparing-ecma6-sets-for-equality
+        if (as.size !== bs.size) return false;
+        for (var a of as) if (!bs.has(a)) return false;
+        return true;
+}
+
 class SimplicialComplexOperators {
 
         /** This class implements various operators (e.g. boundary, star, link) on a mesh.
