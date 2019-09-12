@@ -79,13 +79,8 @@ class SimplicialComplexOperators {
          *  vertex i is in the given subset and 0 otherwise
          */
         buildVertexVector(subset) {
-                let nVerts = this.totalVertices()
-                let T = new Triplet(nVerts, 1)
-                for(let v of subset.vertices){
-                        T.addEntry(1.0, v, 0)
-                }
-                let vertVector = SparseMatrix.fromTriplet(T)
-                return vertVector
+                let vecSize = this.totalVertices()
+                return this.vectorFromSet(subset.vertices, vecSize)
         }
 
         /** Returns a column vector representing the edges of the
