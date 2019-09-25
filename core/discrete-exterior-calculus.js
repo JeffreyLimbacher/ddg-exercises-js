@@ -15,8 +15,8 @@ class DEC {
 	 */
 	static buildHodgeStar0Form(geometry, vertexIndex) {
 		// TODO
-
-		return SparseMatrix.identity(1, 1); // placeholder
+		let massMat = geometry.massMatrix()
+		return massMat
 	}
 
 	/**

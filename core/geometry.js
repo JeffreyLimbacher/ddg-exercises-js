@@ -199,9 +199,22 @@ class Geometry {
 	 * @returns {number}
 	 */
 	cotan(h) {
-		// TODO
+		let vc = h.corner.halfedge.vertex
+		let v1 = h.vertex
+		let v2 = h.twin.vertex
+		let vcPos = this.positions[vc]
+		let v1Pos = this.positions[v1]
+		let v2Pos = this.positions[v2]
 
-		return 0.0; // placeholder
+		let A = v1Pos - vcPos
+		let B = v2Pos - vcPos
+
+		let cross = A.cross(B)
+		let dot = A.dot(B)
+
+		let cotTh = dot.norm() / cross.norm()
+
+		return cotTh; // placeholder
 	}
 
 	/**
@@ -225,8 +238,30 @@ class Geometry {
 	 */
 	barycentricDualArea(v) {
 		// TODO
+		let faces = this.getAllFacesContainingVector(v)
+		let areas = faces.map(f => this.area(f))
+		let baryArea = areas.reduce((a,b) => a + b);
+		return baryArea/3.0 // placeholder
+	}
 
-		return 0.0; // placeholder
+	findHalfedgeFromVertex(v) {
+		for(let i = 0; i < this.mesh.halfedges.length; i++){
+			let h = this.mesh.halfedges[i]
+			if(h.vertex === v){
+				return h
+			}
+		}
+	}
+
+	getAllFacesContainingVector(v) {
+		const h = this.findHalfedgeFromVertex(v)
+		let hNext = h.twin.next;
+		let faces = [h.face]
+		while(h !== hNext){
+			faces.push(hNext.face)
+			hNext = hNext.twin.next
+		}
+		return faces
 	}
 
 	/**
@@ -402,8 +437,16 @@ class Geometry {
 	 */
 	massMatrix(vertexIndex) {
 		// TODO
+		let vertices = this.mesh.vertices
+		let T = new Triplet(vertices.length, vertices.length)
 
-		return SparseMatrix.identity(1, 1); // placeholder
+		vertices.forEach(v => {
+			let bary = this.barycentricDualArea(v)
+			T.addEntry(bary, v.index, v.index)
+		});
+
+		let adjMat = SparseMatrix.fromTriplet(T) // placeholder
+		return adjMat
 	}
 
 	/**
