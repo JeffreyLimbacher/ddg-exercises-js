@@ -199,20 +199,16 @@ class Geometry {
 	 * @returns {number}
 	 */
 	cotan(h) {
-		let vc = h.corner.halfedge.vertex
-		let v1 = h.vertex
-		let v2 = h.twin.vertex
-		let vcPos = this.positions[vc]
-		let v1Pos = this.positions[v1]
-		let v2Pos = this.positions[v2]
 
-		let A = v1Pos - vcPos
-		let B = v2Pos - vcPos
+
+
+		let A = this.vector(h.next.twin)
+		let B = this.vector(h.next.next)
 
 		let cross = A.cross(B)
 		let dot = A.dot(B)
 
-		let cotTh = dot.norm() / cross.norm()
+		let cotTh = dot / cross.norm() 
 
 		return cotTh; // placeholder
 	}
