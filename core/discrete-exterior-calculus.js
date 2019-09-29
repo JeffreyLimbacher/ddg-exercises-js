@@ -27,9 +27,18 @@ class DEC {
 	 * @returns {module:LinearAlgebra.SparseMatrix}
 	 */
 	static buildHodgeStar1Form(geometry, edgeIndex) {
-		// TODO
-
-		return SparseMatrix.identity(1, 1); // placeholder
+		
+		const edges = geometry.mesh.edges;
+		let T = new Triplet(edges.length, edges.length)
+		edges.forEach((edge) => {
+			const h = edge.halfedge;
+			const alpha = geometry.cotan(h)
+			const beta = geometry.cotan(h.twin)
+			const ratio = (alpha + beta) / 2
+			T.addEntry(ratio, edgeIndex[edge], edgeIndex[edge])
+		})
+		const dual = SparseMatrix.fromTriplet(T)
+		return dual
 	}
 
 	/**
