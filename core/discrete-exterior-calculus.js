@@ -70,8 +70,18 @@ class DEC {
 	 */
 	static buildExteriorDerivative0Form(geometry, edgeIndex, vertexIndex) {
 		// TODO
-
-		return SparseMatrix.identity(1, 1); // placeholder
+		const edges = geometry.mesh.edges
+		const vertices = geometry.mesh.vertices
+		let T = new Triplet(edges.length, vertices.length)
+		for(let e of edges){
+			let v1 = e.halfedge.vertex
+			let v2 = e.halfedge.twin.vertex
+			let row = edgeIndex[e]
+			// alpha(v1) - alpha(v2)
+			T.addEntry( 1, row, vertexIndex[v1])
+			T.addEntry(-1, row, vertexIndex[v2])
+		}
+		return SparseMatrix.fromTriplet(T); // placeholder
 	}
 
 	/**
@@ -83,8 +93,18 @@ class DEC {
 	 * @returns {module:LinearAlgebra.SparseMatrix}
 	 */
 	static buildExteriorDerivative1Form(geometry, faceIndex, edgeIndex) {
-		// TODO
-
-		return SparseMatrix.identity(1, 1); // placeholder
+		const edges = geometry.mesh.edges
+		const faces = geometry.mesh.faces
+		let T = new Triplet(faces.length, edges.length)
+		for(let f of faces){
+			const row = faceIndex[f]
+			for(let e of f.adjacentEdges()){
+				// get edge orientation here. Not sure if I understand this fully.
+				// see http://brickisland.net/DDGSpring2019/2019/02/13/1669/#comment-107
+				const entry = e.halfedge.face == f? 1 : -1
+				T.addEntry(entry, row, edgeIndex[e])
+			}
+		}
+		return SparseMatrix.fromTriplet(T)
 	}
 }
