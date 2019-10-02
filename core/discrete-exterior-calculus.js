@@ -50,9 +50,14 @@ class DEC {
 	 * @returns {module:LinearAlgebra.SparseMatrix}
 	 */
 	static buildHodgeStar2Form(geometry, faceIndex) {
-		// TODO
-
-		return SparseMatrix.identity(1, 1); // placeholder
+		const faces = geometry.mesh.faces
+		let T = new Triplet(faces.length, faces.length)
+		
+		for(let f of faces){
+			let geomArea = geometry.area(f)
+			T.addEntry(1/geomArea, faceIndex[f], faceIndex[f])
+		}
+		return SparseMatrix.fromTriplet(T)
 	}
 
 	/**
