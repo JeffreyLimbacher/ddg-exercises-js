@@ -234,30 +234,10 @@ class Geometry {
 	 */
 	barycentricDualArea(v) {
 		// TODO
-		let faces = this.getAllFacesContainingVector(v)
+		let faces = [...v.adjacentFaces()]
 		let areas = faces.map(f => this.area(f))
 		let baryArea = areas.reduce((a,b) => a + b);
 		return baryArea/3.0 // placeholder
-	}
-
-	findHalfedgeFromVertex(v) {
-		for(let i = 0; i < this.mesh.halfedges.length; i++){
-			let h = this.mesh.halfedges[i]
-			if(h.vertex === v){
-				return h
-			}
-		}
-	}
-
-	getAllFacesContainingVector(v) {
-		const h = this.findHalfedgeFromVertex(v)
-		let hNext = h.twin.next;
-		let faces = [h.face]
-		while(h !== hNext){
-			faces.push(hNext.face)
-			hNext = hNext.twin.next
-		}
-		return faces
 	}
 
 	/**
@@ -268,9 +248,15 @@ class Geometry {
 	 * @returns {number}
 	 */
 	circumcentricDualArea(v) {
-		// TODO
-
-		return 0.0; // placeholder
+		let accum = 0.0
+		for(let e of v.adjacentEdges()){
+			let cotan1 = this.cotan(e.halfedge)
+			let cotan2 = this.cotan(e.halfedge.twin)
+			let length = this.length(e)
+			accum += length * length * cotan1
+			accum += length * length * cotan2
+		}
+		return accum / 8.0; // placeholder
 	}
 
 	/**
