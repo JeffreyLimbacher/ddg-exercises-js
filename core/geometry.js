@@ -223,9 +223,20 @@ class Geometry {
 	 * @returns {number} The dihedral angle.
 	 */
 	dihedralAngle(h) {
-		// TODO
+		const a = h.face
+		const b = h.twin.face
 
-		return 0.0; // placeholder
+		const na = this.faceNormal(a)
+		const nb = this.faceNormal(b)
+
+		let e = this.vector(h)
+		e.normalize()
+
+		const rhs = na.dot(nb)
+		const cross = na.cross(nb)
+		const lhs = e.dot(cross)
+		const angle = Math.atan2(lhs, rhs)
+		return angle
 	}
 
 	/**
@@ -286,9 +297,15 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.Vector}
 	 */
 	vertexNormalAreaWeighted(v) {
-		// TODO
-
-		return new Vector(); // placeholder
+		let n = new Vector()
+		for (let f of v.adjacentFaces()){
+			const faceArea = this.area(f)
+			const normal = this.faceNormal(f)
+			normal.scaleBy(faceArea)
+			n.incrementBy(normal)
+		}
+		n.normalize()
+		return n
 	}
 
 	/**
@@ -322,9 +339,17 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.Vector}
 	 */
 	vertexNormalGaussCurvature(v) {
-		// TODO
-
-		return new Vector(); // placeholder
+		let n = new Vector()
+		for(let h of v.adjacentHalfedges()) {
+			const dihedral = this.dihedralAngle(h)
+			let e = this.vector(h)
+			e.normalize()
+			e.scaleBy(dihedral)
+			e.scaleBy(-1)
+			n.incrementBy(e)
+		}
+		n.normalize()
+		return n
 	}
 
 	/**
@@ -334,9 +359,16 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.Vector}
 	 */
 	vertexNormalMeanCurvature(v) {
-		// TODO
-
-		return new Vector(); // placeholder
+		let n = new Vector()
+		for(let h of v.adjacentHalfedges()){
+			const cotalpha = this.cotan(h)
+			const cotbeta = this.cotan(h.twin)
+			let e = this.vector(h)
+			e.scaleBy(cotalpha + cotbeta)
+			n.incrementBy(e)
+		}
+		n.normalize()
+		return n; // placeholder
 	}
 
 	/**
@@ -375,9 +407,20 @@ class Geometry {
 	 * @returns {number}
 	 */
 	angleDefect(v) {
-		// TODO
-
-		return 0.0; // placeholder
+		// http://brickisland.net/DDGSpring2019/wp-content/uploads/2019/03/DDG_458_SP19_Lecture15_DiscreteCurvatureI-1.pdf
+	
+		let angle = 0.0
+		let corners = [...v.adjacentCorners()]
+		for(let i = 0; i < faces.length; i++){
+			const c = corners[i]
+			angle += this.angle(c)
+		}
+		if(v.onBoundary()){
+			return 2*Math.PI - angle 
+		}
+		else{
+			return Math.PI - angle
+		}
 	}
 
 	/**
@@ -409,7 +452,6 @@ class Geometry {
 	 */
 	totalAngleDefect() {
 		// TODO
-
 		return 0.0; // placeholder
 	}
 
