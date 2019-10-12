@@ -187,9 +187,14 @@ class Geometry {
 	 * @returns {number} The angle clamped between 0 and π.
 	 */
 	angle(c) {
-		// TODO
-
-		return 0.0; // placeholder
+		const h = c.halfedge
+		const cotan = this.cotan(h)
+		const tan = 1.0 / cotan
+		let angle = Math.atan(tan)
+		if(angle < 0){
+			angle = Math.PI + angle
+		}
+		return angle
 	}
 
 	/**
@@ -199,9 +204,6 @@ class Geometry {
 	 * @returns {number}
 	 */
 	cotan(h) {
-
-
-
 		let A = this.vector(h.next.twin)
 		let B = this.vector(h.next.next)
 
@@ -269,7 +271,6 @@ class Geometry {
 		let n = new Vector();
 		for (let f of v.adjacentFaces()) {
 			let normal = this.faceNormal(f);
-
 			n.incrementBy(normal);
 		}
 
@@ -297,9 +298,21 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.Vector}
 	 */
 	vertexNormalAngleWeighted(v) {
-		// TODO
+		let n = new Vector();
+		let faces = [...v.adjacentFaces()]
+		let corners = [...v.adjacentCorners()]
+		for (let i = 0; i < faces.length; i++) {
+			let f = faces[i]
+			let c = corners[i]
+			let normal = this.faceNormal(f)
+			let angle = this.angle(c)
+			normal.scaleBy(angle)
+			n.incrementBy(normal)
+		}
 
-		return new Vector(); // placeholder
+		n.normalize();
+
+		return n;
 	}
 
 	/**
@@ -333,9 +346,25 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.Vector}
 	 */
 	vertexNormalSphereInscribed(v) {
-		// TODO
+		let norm = new Vector()
+		let edges = [...v.adjacentHalfedges()]
+		for(let i = 0 ; i < edges.length; i++){
+			let h = edges[i]
+			let nextIdx = (i + 1) % edges.length
+			let nexth = edges[nextIdx]
 
-		return new Vector(); // placeholder
+			let hV = this.vector(h)
+			let nextHv = this.vector(nexth)
+			let cross = nextHv.cross(hV)
+
+			let hVLen2 = hV.norm2()
+			let nextHVLen2 = nextHv.norm2()
+
+			cross.scaleBy(1/(hVLen2*nextHVLen2))
+			norm.incrementBy(cross)
+		}
+		norm.normalize()
+		return norm
 	}
 
 	/**
