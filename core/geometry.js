@@ -411,15 +411,15 @@ class Geometry {
 	
 		let angle = 0.0
 		let corners = [...v.adjacentCorners()]
-		for(let i = 0; i < faces.length; i++){
+		for(let i = 0; i < corners.length; i++){
 			const c = corners[i]
 			angle += this.angle(c)
 		}
 		if(v.onBoundary()){
-			return 2*Math.PI - angle 
+			return Math.PI - angle 
 		}
 		else{
-			return Math.PI - angle
+			return 2*Math.PI - angle
 		}
 	}
 
