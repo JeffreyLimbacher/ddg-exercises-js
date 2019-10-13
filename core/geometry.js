@@ -453,8 +453,10 @@ class Geometry {
 	 * @returns {number}
 	 */
 	totalAngleDefect() {
-		// TODO
-		return 0.0; // placeholder
+
+		const total = this.mesh.vertices.map((v) => this.angleDefect(v))
+			.reduce((a,b) => a+b)
+		return total; // placeholder
 	}
 
 	/**
