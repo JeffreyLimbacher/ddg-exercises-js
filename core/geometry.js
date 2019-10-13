@@ -440,9 +440,11 @@ class Geometry {
 	 * @returns {number}
 	 */
 	scalarMeanCurvature(v) {
-		// TODO
-
-		return 0.0; // placeholder
+		let total = 0.0
+		for(let h of v.adjacentHalfedges()){
+			total += this.dihedralAngle(h) * this.length(h.edge)
+		}
+		return 0.5*total; // placeholder
 	}
 
 	/**
