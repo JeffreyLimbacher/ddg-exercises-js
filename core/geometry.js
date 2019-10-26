@@ -466,9 +466,18 @@ class Geometry {
 	 * @returns {number[]} An array containing the minimum and maximum principal curvature values at a vertex.
 	 */
 	principalCurvatures(v) {
-		// TODO
-
-		return [0.0, 0.0]; // placeholder
+		let H = this.scalarMeanCurvature(v)
+		let K = this.scalarGaussCurvature(v)
+		let det =  Math.sqrt(H*H - K)
+		let sol1 = H + det
+		let check1 = K / sol1
+		let sol2 = H - det
+		let check2 = K / sol2
+		let answer = [sol1,sol2]
+		let checkH = (sol1+sol2)*.5
+		let checkK = sol1*sol2
+		answer.sort((a,b) => Math.abs(a) - Math.abs(b))
+		return answer // placeholder
 	}
 
 	/**
@@ -480,9 +489,33 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.SparseMatrix}
 	 */
 	laplaceMatrix(vertexIndex) {
-		// TODO
 
-		return SparseMatrix.identity(1, 1); // placeholder
+		let vertices = this.mesh.vertices
+		let T = new Triplet(vertices.length, vertices.length)
+		for(let v of vertices){
+			let diag = 0
+			const row = vertexIndex[v]
+			for(let h of v.adjacentHalfedges()){
+				let alpha = this.cotan(h)
+				let beta = this.cotan(h.twin)
+				let l = this.length(h.edge)
+				const col = vertexIndex[h.twin.vertex]
+				T.addEntry(-.5*(alpha+beta), row, col)
+				diag += .5*(alpha+beta)
+			}
+			T.addEntry(diag, row, row)
+		}
+		let mat = SparseMatrix.fromTriplet(T)
+		this.perturbMatrixDiagonal(mat)
+		return mat
+	}
+
+	perturbMatrixDiagonal(matrix) {
+		let n = Math.min(matrix.nRows(), matrix.nCols())
+		let diagElems = DenseMatrix.ones(n, 1)
+		diagElems.scaleBy(1e-8)
+		let perturb = SparseMatrix.diag(diagElems)
+		matrix.incrementBy(perturb)
 	}
 
 	/**
@@ -493,16 +526,15 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.SparseMatrix}
 	 */
 	massMatrix(vertexIndex) {
-		// TODO
 		let vertices = this.mesh.vertices
 		let T = new Triplet(vertices.length, vertices.length)
 
 		vertices.forEach(v => {
 			let bary = this.barycentricDualArea(v)
-			T.addEntry(bary, v.index, v.index)
+			T.addEntry(bary, vertexIndex[v], vertexIndex[v])
 		});
 
-		let adjMat = SparseMatrix.fromTriplet(T) // placeholder
+		let adjMat = SparseMatrix.fromTriplet(T)
 		return adjMat
 	}
 
