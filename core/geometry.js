@@ -498,7 +498,6 @@ class Geometry {
 			for(let h of v.adjacentHalfedges()){
 				let alpha = this.cotan(h)
 				let beta = this.cotan(h.twin)
-				let l = this.length(h.edge)
 				const col = vertexIndex[h.twin.vertex]
 				T.addEntry(-.5*(alpha+beta), row, col)
 				diag += .5*(alpha+beta)
