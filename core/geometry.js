@@ -204,6 +204,9 @@ class Geometry {
 	 * @returns {number}
 	 */
 	cotan(h) {
+		if(h.onBoundary){
+			return 0
+		}
 		let A = this.vector(h.next.twin)
 		let B = this.vector(h.next.next)
 
@@ -212,7 +215,7 @@ class Geometry {
 
 		let cotTh = dot / cross.norm() 
 
-		return cotTh; // placeholder
+		return cotTh // placeholder
 	}
 
 	/**
@@ -546,9 +549,33 @@ class Geometry {
 	 * @returns {module:LinearAlgebra.ComplexSparseMatrix}
 	 */
 	complexLaplaceMatrix(vertexIndex) {
-		// TODO
+		let vertices = this.mesh.vertices
+		let T = new ComplexTriplet(vertices.length, vertices.length)
+		for(let v of vertices){
+			let diag = new Complex(0, 0)
+			const row = vertexIndex[v]
+			for(let h of v.adjacentHalfedges()){
+				let alpha = this.cotan(h)
+				let beta = this.cotan(h.twin)
+				const col = vertexIndex[h.twin.vertex]
+				let insert = new Complex(.25*(alpha+beta), 0)
+				let negInsert = insert.timesReal(-1)
+				T.addEntry(negInsert, row, col)
+				diag = diag.plus(insert)
+			}
+			T.addEntry(diag, row, row)
+		}
+		let mat = ComplexSparseMatrix.fromTriplet(T)
+		this.complexPerturbMatrixDiagonal(mat)
+		return mat
+	}
 
-		return ComplexSparseMatrix.identity(1, 1); // placeholder
+	complexPerturbMatrixDiagonal(matrix) {
+		let n = Math.min(matrix.nRows(), matrix.nCols())
+		let diagElems = ComplexDenseMatrix.ones(n, 1)
+		diagElems.scaleBy(new Complex(1e-8, 0))
+		let perturb = ComplexSparseMatrix.diag(diagElems)
+		matrix.incrementBy(perturb)
 	}
 }
 

@@ -14,9 +14,14 @@ class Solvers {
 	 * @returns {number}
 	 */
 	static residual(A, x) {
-		// TODO
-
-		return 0.0; // placeholder
+		x.scaleBy(new Complex(1/x.norm(),0))
+		let Ax = A.timesDense(x)
+		let eig = x.transpose().conjugate().timesDense(Ax)
+		let eigenVal = eig.get(0,0)
+		let lambdaX = x.timesComplex(eigenVal)
+		let residVec = Ax.minus(lambdaX)
+		let resid = residVec.norm()
+		return resid; // placeholder
 	}
 
 	/**
