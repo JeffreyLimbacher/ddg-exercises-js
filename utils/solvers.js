@@ -21,7 +21,7 @@ class Solvers {
 		let lambdaX = x.timesComplex(eigenVal)
 		let residVec = Ax.minus(lambdaX)
 		let resid = residVec.norm()
-		return resid; // placeholder
+		return resid;
 	}
 
 	/**
@@ -34,9 +34,24 @@ class Solvers {
 	 * smallest eigenvalue λ) of A.
 	 */
 	static solveInversePowerMethod(A) {
-		// TODO
-
-		return ComplexDenseMatrix.zeros(1, 1); // placeholder
+		let x = ComplexDenseMatrix.random(A.nRows(), 1)
+		x.scaleBy(new Complex(1/x.norm()))
+		const maxIters = 1000
+		let iters = 0
+		while(this.residual(A, x) > 1e-10 && iters < maxIters) {
+			iters++
+			x = A.lu().solveSquare(x)
+			let xBar = x.sum().overReal(x.nRows())
+			let xBarVec = ComplexDenseMatrix.constant(xBar, x.nRows(), 1)
+			x.decrementBy(xBarVec)
+			x.scaleBy(new Complex(1/x.norm(2)))
+		}
+		this.residual(A, x)
+		console.log(x.get(0,0), x.get(1,0), x.get(2,0))
+		let test = A.timesDense(x)
+		test.scaleBy(new Complex(1/test.norm()))
+		console.log(test.get(0,0), test.get(1,0), test.get(2,0))
+		return x
 	}
 
 	/**

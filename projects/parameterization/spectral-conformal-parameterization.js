@@ -48,9 +48,14 @@ class SpectralConformalParameterization {
 	 */
 	flatten() {
 		let vertices = this.geometry.mesh.vertices;
-		let flattening = this.geometry.positions; 
-		vectors = {};
-		
+		let flattening = this.geometry.positions 
+		let x = Solvers.solveInversePowerMethod(this.buildConformalEnergy())
+		flattening = {}
+		for(let v of this.geometry.mesh.vertices){
+			let elem = x.get(this.vertexIndex[v], 0)
+
+			flattening[v] = new Vector(elem.re, elem.im)
+		}
 		// normalize flattening
 		normalize(flattening, vertices);
 
