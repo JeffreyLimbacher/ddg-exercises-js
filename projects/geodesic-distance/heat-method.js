@@ -13,11 +13,24 @@ class HeatMethod {
 	 */
 	constructor(geometry) {
 		this.geometry = geometry;
-		this.vertexIndex = indexElements(geometry.mesh.vertices);
+		const vertices = geometry.mesh.vertices
+		this.vertexIndex = indexElements(vertices);
 
-		// TODO: build laplace and flow matrices
-		this.A = SparseMatrix.identity(1, 1); // placeholder
-		this.F = SparseMatrix.identity(1, 1); // placeholder
+		this.A = this.geometry.laplaceMatrix(this.vertexIndex ) 
+
+		let h = 0
+		// calculate mean spacing
+		for(let e of this.geometry.mesh.edges) {
+			h += this.geometry.length(e)
+		}
+		h = h / this.geometry.mesh.edges.length
+		h = h * h
+		// flow op
+		let L = this.A.timesReal(1.0)
+		L.scaleBy(h)
+		const M = this.geometry.massMatrix(this.vertexIndex)
+		let op = M.plus(L)
+		this.F = op
 	}
 
 	/**
@@ -29,9 +42,23 @@ class HeatMethod {
 	 * @returns {Object} A dictionary mapping each face of the input mesh to a {@link module:LinearAlgebra.Vector Vector}.
 	 */
 	computeVectorField(u) {
-		// TODO
-
-		return {}; // placeholder
+		let X = {}
+		for(let f of this.geometry.mesh.faces){
+			const N = this.geometry.faceNormal(f)
+			let total = new Vector()
+			for(let c of f.adjacentCorners()){
+				const v = c.vertex
+				const i = this.vertexIndex[v]
+				const ei = this.geometry.vector(c.halfedge)
+				let res = ei.cross(N)
+				const ui = u.get(i, 0)
+				res.scaleBy(ui)
+				total.incrementBy(res)
+			}
+			total.normalize()
+			X[f] = total
+		}
+		return X
 	}
 
 	/**
@@ -43,9 +70,24 @@ class HeatMethod {
 	 * @returns {module:LinearAlgebra.DenseMatrix}
 	 */
 	computeDivergence(X) {
-		// TODO
-
-		return DenseMatrix.zeros(1, 1); // placeholder
+		let gradX = DenseMatrix.zeros(this.geometry.mesh.vertices.length, 1)
+		for(let v of this.geometry.mesh.vertices) {
+			let div = 0
+			for(let h0 of v.adjacentHalfedges()){
+				const f = h0.face
+				const Xj = X[f]
+				let hs = [h0, h0.next.next]
+				let e = hs.map(h => this.geometry.vector(h))
+				e[1].scaleBy(-1)
+				let cot = hs.map(h => this.geometry.cotan(h))
+				let eXj = e.map(ei => Xj.dot(ei))
+				let eXjCot = eXj.map((e,i) => e * cot[i])
+				div += eXjCot.reduce((a,b)=> a+b)
+			}
+			div = div/2
+			gradX.set(div, this.vertexIndex[v], 0)
+		}
+		return gradX
 	}
 
 	/**
@@ -73,9 +115,11 @@ class HeatMethod {
 	 * @returns {module:LinearAlgebra.DenseMatrix}
 	 */
 	compute(delta) {
-		// TODO
-		let phi = DenseMatrix.zeros(delta.nRows(), 1); // placeholder
-
+		let u = this.F.chol().solvePositiveDefinite(delta)
+		let X = this.computeVectorField(u)
+		let divX = this.computeDivergence(X)
+		let phi = this.A.chol().solvePositiveDefinite(divX)
+		phi.scaleBy(-1)
 		// since φ is unique up to an additive constant, it should
 		// be shifted such that the smallest distance is zero
 		this.subtractMinimumDistance(phi);
