@@ -469,8 +469,8 @@ class Geometry {
 	 * @returns {number[]} An array containing the minimum and maximum principal curvature values at a vertex.
 	 */
 	principalCurvatures(v) {
-		let H = this.scalarMeanCurvature(v)
-		let K = this.scalarGaussCurvature(v)
+		let H = this.scalarMeanCurvature(v) / this.circumcentricDualArea(v)
+		let K = this.scalarGaussCurvature(v) / this.circumcentricDualArea(v)
 		let det =  Math.sqrt(H*H - K)
 		let sol1 = H + det
 		let check1 = K / sol1
