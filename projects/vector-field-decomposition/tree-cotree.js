@@ -24,7 +24,18 @@ class TreeCotree {
 	 * @method module:Projects.TreeCotree#buildPrimalSpanningTree
 	 */
 	buildPrimalSpanningTree() {
-		// TODO
+		let v = this.mesh.vertices[0]
+		let queue = [this.mesh.vertices[0]]
+		this.vertexParent[v] = v
+		while(queue.length > 0){
+			let curv = queue.pop()
+			for(let neighbor of curv.adjacentVertices()){
+				if(!(neighbor in this.vertexParent)){
+					this.vertexParent[neighbor] = curv
+					queue.push(neighbor)
+				}
+			}
+		}
 	}
 
 	/**
@@ -35,9 +46,9 @@ class TreeCotree {
 	 * @returns {boolean}
 	 */
 	inPrimalSpanningTree(h) {
-		// TODO
-
-		return false; // placeholder
+		let v1 = h.vertex
+		let v2 = h.twin.vertex
+		return this.vertexParent[v1] === v2 || this.vertexParent[v2] === v1
 	}
 
 	/**
