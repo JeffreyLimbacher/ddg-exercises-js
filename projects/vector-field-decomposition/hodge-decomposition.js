@@ -23,23 +23,18 @@ class HodgeDecomposition {
 		this.edgeIndex = indexElements(geometry.mesh.edges);
 		let faceIndex = indexElements(geometry.mesh.faces);
 
-		// TODO: compute DEC operators
-		this.hodge1 = SparseMatrix.identity(1, 1); // placeholder
-		this.hodge2 = SparseMatrix.identity(1, 1); // placeholder
-		this.d0 = SparseMatrix.identity(1, 1); // placeholder
-		this.d1 = SparseMatrix.identity(1, 1); // placeholder
+		this.hodge1 = DEC.buildHodgeStar1Form(geometry, this.edgeIndex) 
+		this.hodge2 = DEC.buildHodgeStar2Form(geometry, faceIndex)
+		this.d0 = DEC.buildExteriorDerivative0Form(geometry, this.edgeIndex, vertexIndex)
+		this.d1 = DEC.buildExteriorDerivative1Form(geometry, faceIndex, this.edgeIndex)
 
-		this.hodge1Inv = SparseMatrix.identity(1, 1); // placeholder
-		this.hodge2Inv = SparseMatrix.identity(1, 1); // placeholder
-		this.d0T = SparseMatrix.identity(1, 1); // placeholder
-		this.d1T = SparseMatrix.identity(1, 1); // placeholder
+		this.hodge1Inv = this.hodge1.invertDiagonal()
+		this.hodge2Inv = this.hodge2.invertDiagonal()
+		this.d0T = this.d0.transpose() 
+		this.d1T = this.d1.transpose() 
+		this.A = geometry.laplaceMatrix(vertexIndex)
 
-		// TODO: construct 0-form laplace matrix
-		// shift the matrix by a small constant (1e-8) to make it positive definite
-		this.A = SparseMatrix.identity(1, 1); // placeholder
-
-		// TODO: construct two form matrix
-		this.B = SparseMatrix.identity(1, 1); // placeholder
+		this.B = this.d1.timesSparse(this.hodge1Inv.timesSparse(this.d1T))
 	}
 
 	/**
@@ -49,9 +44,11 @@ class HodgeDecomposition {
 	 * @returns {module:LinearAlgebra.DenseMatrix} The exact component dα of ω.
 	 */
 	computeExactComponent(omega) {
-		// TODO
-
-		return DenseMatrix.zeros(omega.nRows(), 1); // placeholder
+		const omegaH = this.hodge1.timesDense(omega)
+		const rhs = this.d0T.timesDense(omegaH)
+		const alpha = this.A.chol().solvePositiveDefinite(rhs)
+		const dAlpha = this.d0.timesDense(alpha)
+		return dAlpha
 	}
 
 	/**
@@ -61,9 +58,10 @@ class HodgeDecomposition {
 	 * @returns {module:LinearAlgebra.DenseMatrix} The coexact component 𝛿β of ω.
 	 */
 	computeCoExactComponent(omega) {
-		// TODO
-
-		return DenseMatrix.zeros(omega.nRows(), 1); // placeholder
+		const rhs = this.d1.timesDense(omega)
+		const betaTilde = this.B.lu().solveSquare(rhs)
+		const deltaBeta = this.hodge1Inv.timesDense(this.d1T.timesDense(betaTilde))
+		return deltaBeta
 	}
 
 	/**
@@ -75,8 +73,7 @@ class HodgeDecomposition {
 	 * @returns {module:LinearAlgebra.DenseMatrix}
 	 */
 	computeHarmonicComponent(omega, dAlpha, deltaBeta) {
-		// TODO
-
-		return DenseMatrix.zeros(omega.nRows(), 1); // placeholder
+		const gamma = omega.minus(dAlpha).minus(deltaBeta)
+		return gamma
 	}
 }
